@@ -8,7 +8,7 @@ import pke
 import string
 from nltk.corpus import stopwords
 
-pool = Pool(8) # Number of concurrent threads
+pool = Pool(12) # Number of concurrent threads
 files = []
 r = sr.Recognizer()
 
@@ -38,9 +38,9 @@ def keyworder(text):
     # 4. build topics by grouping candidates with HAC (average linkage,
     #    threshold of 1/4 of shared stems). Weight the topics using random
     #    walk, and select the first occuring candidate from each topic.
-    extractor.candidate_weighting(threshold=0.75, method='average')
+    extractor.candidate_weighting(threshold=0.74, method='average')
     # 5. get the 10-highest scored candidates as keyphrases
-    keyphrases = extractor.get_n_best(n=5)
+    keyphrases = extractor.get_n_best(n=3)
     return keyphrases
 
 
@@ -61,21 +61,21 @@ def transcribe(data):
     # The only standalone network is Mozilla deepspeech and it sucks
     # Alternatives are Bing, IBM, ..., check the documentation of sr
     text = r.recognize_google(audio)
-    keywords = keyworder(text)
+    #keywords = keyworder(text)
     # we are not interested in probabilistic rank
     # so cleaning up here
-    clean_keywords = ''
-    for k, v in keywords:
-        clean_keywords = k + " - " + clean_keywords
-    clean_keywords = clean_keywords[:-2] 
+    #clean_keywords = ''
+    #for k, v in keywords:
+    #    clean_keywords = k + " - " + clean_keywords
+    #clean_keywords = clean_keywords[:-2] 
 
     #, credentials_json=GOOGLE_CLOUD_SPEECH_CREDENTIALS)
     print(name + " done")
     return {
         "idx": idx,
         "text": text,
-        "keywords": clean_keywords
     }
+        #"keywords": clean_keywords
 
 # Each file is indexed and then calls transcribe() as variable "data"
 # for multithreading to work.
@@ -97,7 +97,8 @@ for t in sorted(all_text, key=lambda x: x['idx']):
 
     # Format time as h:m:s - 30 seconds of text
     # add keywords for each 30s
-    transcript = transcript + "{:0>2d}:{:0>2d}:{:0>2d} : {} \n \n {} \n \n".format(h, m, s, t['keywords'], t['text'])
+    transcript = transcript + "{:0>2d}:{:0>2d}:{:0>2d} : {} \n \n".format(h, m, s, t['text'])
+    #transcript = transcript + "{:0>2d}:{:0>2d}:{:0>2d} : {} \n \n {} \n \n".format(h, m, s, t['keywords'], t['text'])
     clean_transcript = clean_transcript + t['text']
 
 global_keywords = keyworder(clean_transcript)
